@@ -6,13 +6,15 @@ const constants = require('gocardless-nodejs/constants');
 //api docs link
 //https://developer.gocardless.com/getting-started/api/making-your-first-request/
 
+
+
 //(i)
 //first go to sandbox and create your account .
 //click on create access token and give token a name and give read and write access
 //create gocardless access token  (e:g)  
 //sandbox_iGI0R5ZlRf9fLMc-iRnJ8eVkolJd-1YqRwqqN0Yp
-const sessionToken='dummySessionToken'
-const GoCardlessAccessToken='sandbox_FK26Bhfp5m4EkN5vSSzMGHlPV2UwZxwyUcdt8Aht'
+const sessionToken='testToken'
+const GoCardlessAccessToken='sandbox_jn3O2cXuAs-2KQj8hBhLOMYo7bs29AukhWXAtEKm'
 const client = gocardless(
     // We recommend storing your access token in an environment
     // variable for security like given below
@@ -42,9 +44,9 @@ router.get('/gocardlessCreateUser',async(req,res)=>{
               "https://developer.gocardless.com/example-redirect-uri/",  // in real integeration this will be the link to a success page of your website 
             // Optionally, prefill customer details on the payment page
             prefilled_customer: {
-              given_name: "user2",
-              family_name: "user2",
-              email: "user2@gocardless.com",
+              given_name: "haseeb",
+              family_name: "haseeb",
+              email: "user@gocardless.com",
               address_line1: "338-346 Goswell Road",
               city: "London",
               postal_code: "EC1V 7LQ"
@@ -55,7 +57,10 @@ router.get('/gocardlessCreateUser',async(req,res)=>{
           // "confirm" the redirect flow later
           console.log(redirectFlow.id);
           console.log(redirectFlow.redirect_url);
-
+          res.send({ 
+            redirectFlowID:redirectFlow.id,
+            redirectFlowURL:redirectFlow.redirect_url
+          })
           //untill now we create user and get a redirect url (page url on gocardless)   which we can send our customer to in order to have them set up a mandate.
           //for uk test sort code = 200000 and bank account = 55779911
           //after completing the given form user will be redirected to success redirect url we just set up above in
@@ -80,7 +85,7 @@ router.get('/gocardlessCompleteMandate',async(req,res)=>{
     try {
         console.log(sessionToken)
         const redirectFlow = await client.redirectFlows.complete(
-            "RE0002XXXX5X4C4KDQ80GVY1ZRS0Z3H6", //this is redirectFlow.id and in query parameter also we get in redirectFlow in above route.
+            "RE0002XY29BE47PE3GC688DH55AXZCFP", //this is redirectFlow.id and in query parameter also we get in redirectFlow in above route.
             {
               session_token: sessionToken
             }
@@ -95,6 +100,11 @@ router.get('/gocardlessCompleteMandate',async(req,res)=>{
           // set up. You could build your own, or use ours, which shows all the relevant
           // information and is translated into all the languages we support.
           console.log(`Confirmation URL: ${redirectFlow.confirmation_url}`);
+          res.send({
+            Mandate:redirectFlow.links.mandate,
+            Customer:redirectFlow.links.customer,
+            ConfirmationURL:redirectFlow.confirmation_url
+          })
     } catch (e) {
         console.log(e.message)
     }
@@ -106,22 +116,22 @@ router.get('/gocardlessPayment',async(req,res)=>{
     try {
         const payment = await client.payments.create(
             {
-              amount: 9000,
+              amount: 13000,
               currency: "GBP",  // UK currency
               links: {
-                mandate: "MD000CV1G83ATK"  //mandate we get in route gocardless2
+                mandate: "MD000CXQWMPVN9"  //mandate we get in route gocardless2
               },
               metadata: {
-                invoice_number: "005" // generate according to your invoices in your database
+                invoice_number: "009" // generate according to your invoices in your database
               }
             },
-            "random_payment_specific_string4" // a string should be unique for every payment
+            "random_payment_specific_string9" // a string should be unique for every payment
           );
           
           // Keep hold of this payment ID - we'll use it in a minute
           // It should look like "PM000260X9VKF4"
           console.log(payment.id);
-
+          res.send('Payment ID :'+payment.id)
     } catch (e) {
         console.log(e)
     }
@@ -130,7 +140,7 @@ router.get('/gocardlessPayment',async(req,res)=>{
 router.get('/gocardlessPaymentDetails',async(req,res)=>{
     try {
         
-        const paymentId = "PM001TWEVWWK2J";
+        const paymentId = "PM001TWGZHYT34";
 
         const paymentDetails = await client.payments.find(paymentId);
 
@@ -138,8 +148,9 @@ router.get('/gocardlessPaymentDetails',async(req,res)=>{
         console.log(`Status: ${paymentDetails.status}`);
         console.log("Cancelling...");
 
-        //const cancelPayment = await client.payments.cancel(paymentId);
-        //console.log(`Status: ${cancelPayment.status}`);
+        const cancelPayment = await client.payments.cancel(paymentId);
+        console.log(`Status: ${cancelPayment.status}`);
+        res.send('Payment :'+paymentId+' cancelled')
     } catch (e) {
         console.log(e)
     }
@@ -150,20 +161,23 @@ router.get('/gocardlessSubscription',async(req,res)=>{
     try {
         const subscription = await client.subscriptions.create(
             {
-              amount: 150000,
+              amount: 250000,
               currency: "GBP",
               name: "Monthly subscription",
               interval: 1,
               interval_unit: "monthly",
               day_of_month: 5,
               links: {
-                mandate: "MD000CV1G83ATK"
+                mandate: "MD000CXQWMPVN9"
               }
             },
-            "unique_subscription_specific_string"
+            "unique_subscription_specific_string2"
           );
           
           console.log(subscription.id);
+          res.send({
+            subscriptionID:subscription.id
+          })
     } catch (e) {
         console.log(e)
     }
@@ -172,7 +186,7 @@ router.get('/gocardlessSubscription',async(req,res)=>{
 router.get('/gocardlessCancelSubscription',async(req,res)=>{
     try {
         // Subscription ID from above
-        const subscriptionId = "SB00042B499HVP";
+        const subscriptionId = "SB00042BACSXV7";
 
         const subscription = await client.subscriptions.find(subscriptionId);
 
@@ -181,9 +195,23 @@ router.get('/gocardlessCancelSubscription',async(req,res)=>{
 
         const cancelSubscription = await client.subscriptions.cancel(subscriptionId);
         console.log(`Status: ${cancelSubscription.status}`);
+
+        res.send(`Subscription Status: ${cancelSubscription.status}`)
     } catch (e) {
         console.log(e)
     }
 })
+
+
+
+
+
+
+
+
+//Note:
+//mandate will be created for an account only once.you cannot create mandate for an account twice , will through an error
+//you cannot take payments with same payment string twice will through an error. same goes for subscription
+
 
 module.exports=router
