@@ -14,7 +14,7 @@ const constants = require('gocardless-nodejs/constants');
 //create gocardless access token  (e:g)  
 //sandbox_iGI0R5ZlRf9fLMc-iRnJ8eVkolJd-1YqRwqqN0Yp
 const sessionToken='testToken'
-const GoCardlessAccessToken='sandbox_jn3O2cXuAs-2KQj8hBhLOMYo7bs29AukhWXAtEKm'
+const GoCardlessAccessToken='sandboxAccessTokenHere'
 const client = gocardless(
     // We recommend storing your access token in an environment
     // variable for security like given below
